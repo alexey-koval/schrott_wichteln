@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { useState } from "react";
+import { signOut } from "next-auth/react";
 import { Wheel, Segment } from "../components/Wheel";
 
 type WheelResponse = {
@@ -9,23 +9,15 @@ type WheelResponse = {
     segments: Segment[];
 };
 
-export default function SantaPage() {
-    const { data: session, status } = useSession();
+export const dynamic = "force-dynamic";
 
+export default function SantaPage() {
     const [who, setWho] = useState("");
     const [participant, setParticipant] = useState<WheelResponse["participant"] | null>(null);
     const [segments, setSegments] = useState<Segment[]>([]);
     const [statusText, setStatusText] = useState<string | null>(null);
     const [lastResult, setLastResult] = useState<Segment | null>(null);
     const [loadingWheel, setLoadingWheel] = useState(false);
-
-    // If middleware is configured, unauth users won't reach here.
-    // But we still handle the UI gracefully.
-    useEffect(() => {
-        if (status === "unauthenticated") {
-            setStatusText("Please sign in as Santa.");
-        }
-    }, [status]);
 
     const generateWheel = async () => {
         setStatusText(null);
@@ -36,10 +28,10 @@ export default function SantaPage() {
 
         try {
             const res = await fetch(`/api/wheel?who=${encodeURIComponent(who.trim())}`);
-            const data = (await res.json()) as any;
+            const data = await res.json().catch(() => ({}));
 
             if (!res.ok) {
-                setStatusText(data?.error || "Failed to generate wheel");
+                setStatusText((data as any)?.error || "Failed to generate wheel");
                 return;
             }
 
@@ -68,25 +60,18 @@ export default function SantaPage() {
 
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-            setStatusText(data?.error || "Failed to save result");
+            setStatusText((data as any)?.error || "Failed to save result");
             return;
         }
 
-        setStatusText(`Done! Participant receives: ${data.assignment.gift.title}`);
+        setStatusText(`Done! Participant receives: ${(data as any).assignment.gift.title}`);
     };
 
     return (
         <main style={{ maxWidth: 980, margin: "0 auto", padding: 16, display: "grid", gap: 16 }}>
             <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <h1 style={{ margin: 0 }}>🎅 Santa Console</h1>
-
-                <div style={{ display: "flex", gap: 8 }}>
-                    {session ? (
-                        <button onClick={() => signOut({ callbackUrl: "/login" })}>Sign out</button>
-                    ) : (
-                        <button onClick={() => signIn(undefined, { callbackUrl: "/santa" })}>Sign in</button>
-                    )}
-                </div>
+                <button onClick={() => signOut({ callbackUrl: "/login" })}>Sign out</button>
             </header>
 
             <section style={{ border: "1px solid #eee", borderRadius: 16, padding: 16 }}>
