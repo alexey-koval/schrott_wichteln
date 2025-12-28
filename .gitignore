@@ -1,0 +1,48 @@
+# ===============================
+# Node / Next.js
+# ===============================
+node_modules/
+.next/
+out/
+dist/
+build/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ===============================
+# Environment variables (SECRETS!)
+# ===============================
+.env
+.env.*
+!.env.example
+
+# ===============================
+# Prisma
+# ===============================
+prisma/dev.db
+prisma/*.db
+prisma/*.db-journal
+
+# Prisma client (generated)
+node_modules/.prisma/
+
+# ===============================
+# OS / Editor
+# ===============================
+.DS_Store
+Thumbs.db
+
+.vscode/*
+!.vscode/extensions.json
+
+.idea/
+*.iml
+
+# ===============================
+# Tests / Coverage
+# ===============================
+coverage/
