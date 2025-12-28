@@ -36,6 +36,12 @@ export default function LoginPage() {
                 <button type="submit">Sign in</button>
                 {error && <div style={{ color: "crimson" }}>{error}</div>}
             </form>
+            <p style={{ marginTop: 12, textAlign: "center", opacity: 0.8 }}>
+                No account yet?{" "}
+                <a href="/register" style={{ textDecoration: "underline" }}>
+                    Create one
+                </a>
+            </p>
 
             <style jsx>{`
         input,
