@@ -3,24 +3,26 @@ import { withAuth } from "next-auth/middleware";
 export default withAuth({
     callbacks: {
         authorized: ({ token, req }) => {
-            const pathname = req.nextUrl.pathname;
+            const p = req.nextUrl.pathname;
 
-            // Public routes
-            if (pathname.startsWith("/login")) return true;
-            if (pathname.startsWith("/register")) return true;
-            if (pathname.startsWith("/api/auth")) return true;
-            if (pathname.startsWith("/api/register")) return true;
+            // Public pages (participants)
+            if (p === "/") return true;
 
-            // Santa page: admin only
-            if (pathname.startsWith("/santa")) {
+            // Public auth endpoints
+            if (p.startsWith("/api/auth")) return true;
+
+            // Public participant submit endpoint
+            if (p.startsWith("/api/gift")) return true;
+
+            // Login page itself is public
+            if (p.startsWith("/login")) return true;
+
+            // Everything Santa-related requires admin
+            if (p.startsWith("/santa") || p.startsWith("/api/wheel") || p.startsWith("/api/spin")) {
                 return token?.isAdmin === true;
             }
 
-            // Participant page (/) requires normal login
-            if (pathname === "/" || pathname.startsWith("/api/")) {
-                return !!token;
-            }
-
+            // Default: allow
             return true;
         }
     }
