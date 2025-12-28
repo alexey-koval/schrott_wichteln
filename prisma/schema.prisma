@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+
+  firstName    String?
+  lastName     String?
+  nickname     String?
+
+  gift         Gift?
+  assignment   Assignment?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Gift {
+  id          String   @id @default(cuid())
+  ownerId     String   @unique
+  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String
+  wrapHint    String?
+
+  assigned    Boolean  @default(false)
+  assignedAt  DateTime?
+
+  assignment  Assignment?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Assignment {
+  id         String   @id @default(cuid())
+
+  receiverId String   @unique
+  receiver   User     @relation(fields: [receiverId], references: [id], onDelete: Cascade)
+
+  giftId     String   @unique
+  gift       Gift     @relation(fields: [giftId], references: [id])
+
+  createdAt  DateTime @default(now())
+}
