@@ -29,11 +29,17 @@ export const authOptions: NextAuthOptions = {
     ],
     callbacks: {
         async jwt({ token, user }) {
-            if (user) token.uid = (user as any).id;
+            if (user) {
+                token.uid = (user as any).id;
+                token.username = (user as any).name; // username
+                token.isAdmin = (user as any).name === process.env.SANTA_USERNAME;
+            }
             return token;
         },
         async session({ session, token }) {
             (session as any).uid = token.uid;
+            (session as any).isAdmin = token.isAdmin;
+            (session as any).username = token.username;
             return session;
         }
     },
