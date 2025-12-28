@@ -1,30 +1,42 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../../../lib/auth";
 import { prisma } from "../../../lib/prisma";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request) {
-    const session = await getServerSession(authOptions);
-    const uid = (session as any)?.uid as string | undefined;
-    if (!uid) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const body = await req.json().catch(() => null);
 
-    const body = await req.json();
-    const { firstName, lastName, nickname, title, description, wrapHint } = body ?? {};
+    const firstName = String(body?.firstName ?? "").trim();
+    const lastName = String(body?.lastName ?? "").trim();
+    const nickname = String(body?.nickname ?? "").trim();
 
-    if (!title || !description) {
-        return NextResponse.json({ error: "title/description required" }, { status: 400 });
+    const title = String(body?.title ?? "").trim();
+    const wrapHintRaw = String(body?.wrapHint ?? "").trim();
+    const wrapHint = wrapHintRaw ? wrapHintRaw : null;
+
+    const description = String(body?.description ?? "").trim();
+
+    if (!firstName || !lastName || !nickname || !title) {
+        return NextResponse.json(
+            { error: "firstName, lastName, nickname and title are required" },
+            { status: 400 }
+        );
     }
 
-    const user = await prisma.user.update({
-        where: { id: uid },
-        data: { firstName, lastName, nickname }
+    // Create/update participant by nickname (unique)
+    const participant = await prisma.participant.upsert({
+        where: { nickname },
+        update: { firstName, lastName },
+        create: { firstName, lastName, nickname }
     });
 
+    // Create/update gift for participant (one gift per participant)
     await prisma.gift.upsert({
-        where: { ownerId: uid },
-        update: { title, description, wrapHint },
-        create: { ownerId: uid, title, description, wrapHint }
+        where: { ownerId: participant.id },
+        update: { title, wrapHint, description },
+        create: { ownerId: participant.id, title, wrapHint, description }
     });
 
-    return NextResponse.json({ ok: true, user });
+    return NextResponse.json({ ok: true });
 }
